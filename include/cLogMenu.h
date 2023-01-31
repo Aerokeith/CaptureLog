@@ -1,13 +1,19 @@
+/* The CaptureLogMenu library (consisting of cLogMenu.h and cLogMenu.cpp) is intended to be used in conjuntion with the
+    CaptureLog library. The CaptureLogMenu library implements a C++ class that enables selective printing of capture
+    logs via a simple character-based menu that utilizes the Serial Monitor (or equivalent terminal emulator). 
+*/
+
 #include <Arduino.h>
 #include "cLog.h"
 
   // messages used to provide user feedback
-const char continueMsg[] = "[Press any key to continue, or <ESC> to exit]";
+const char continueMsg[] = "[Press any key to continue]";
 const char promptMsg[] = "Select debug log";
 const char emptyLogMsg[] = "<log is empty>";
 const char emptyMenuMsg[] = "No logs have been added to the menu";
 const char badSelMsg[] = "Unknown command";
-const char escMsg[] = "Exit";
+const char exitMsg[] = "Exit";
+const char exitChar = 'x';
 
   // Structure used to describe the cLogs added to the menu
 struct menuConfigStruct {

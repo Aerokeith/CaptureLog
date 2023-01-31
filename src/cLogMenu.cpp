@@ -1,3 +1,8 @@
+/* The CaptureLogMenu library (consisting of cLogMenu.h and cLogMenu.cpp) is intended to be used in conjuntion with the
+    CaptureLog library. The CaptureLogMenu library implements a C++ class that enables selective printing of capture
+    logs via a simple character-based menu that utilizes the Serial Monitor (or equivalent terminal emulator). 
+*/
+
 #include <Arduino.h>
 #include "cLog.h"
 #include "cLogMenu.h"
@@ -47,6 +52,7 @@ void cLogMenuClass::printLog(uint8_t index) {
   uint16_t entry;             // temp used to count the number of cLog entries printed
   uint16_t entryPageCount;    // counts the number of entries printyed on the current page
   char *logData;              // pointer to the cLog entry (string)
+  char inputChar;             // keystroke from serial monitor
   
   if (index >= endIndex)  // if index is past the last entry in the menu table (shouldn't happen)
     return ;
@@ -61,16 +67,23 @@ void cLogMenuClass::printLog(uint8_t index) {
   }
   while (entry < logPtr->numEntries) {    // for each entry in the cLog
     logData = logPtr->get(entry);         // get pointer to the current cLog entry
-    Serial.printf("[%i] %s\n", entry, logData);   // print it preceded by the entry number
+    Serial.print('[');
+    Serial.print(entry);
+    Serial.print("] ");
+    Serial.println(logData);              // print it preceded by the entry number
     entry++;            // count the total entries printed
     entryPageCount++;   // count the entries printed on this page
     if (pageLength != 0) {  // if pagination isn't disabled
         // if not done and page length limit is reached
       if ((entry < logPtr->numEntries) && (entryPageCount == pageLength)) {
         entryPageCount = 0;   //; reset the page count
-        Serial.printf("%s\n\n", continueMsg);   // print the continue prompt
-        while (!Serial.available()) { }         // wait for a key to be pressed
-        if (Serial.read() == '\x1b')      // if it's the ESC char, bail out
+        Serial.println(continueMsg);        // print the continue prompt
+        Serial.println();
+        while (!Serial.available()) { }     // wait for a key to be pressed
+        inputChar = Serial.read();          // get the char
+        while (Serial.available())          // discard any following chars (CR/LF from Arduino serial monitor)
+          Serial.read();
+        if (inputChar == exitChar)          // if it's the exit char, bail out
           return ;
         Serial.println(configP->headerString);  // print the header to start the next page
       }
@@ -91,20 +104,24 @@ void cLogMenuClass::logMenu() {
     Serial.println(emptyMenuMsg);
     return;
   }
-  while (1) {         // repeat until exit caused by pressing ESC key
+  while (1) {         // repeat until exit caused by pressing exit char
     Serial.println();
-    Serial.printf("%s %s", promptMsg, "[ ");    // print the first part of the menu prompt
+    Serial.print(promptMsg);    // print the first part of the menu prompt
+    Serial.print("[ ");
     for (n = 0; n < endIndex; n++) {            //; print each of the specified selection characters
-      Serial.printf("%c ", menuTable[n].selectionChar);
+      Serial.print(menuTable[n].selectionChar);
+      Serial.print(' ');
     }
     Serial.print("] >> ");            // finish printing the menu prmpt
     while (!Serial.available()) { }   // wait until a serial monitor key is pressed
     selection = Serial.read();        // get the char
-    if (selection == '\x1b') {        // if its an ESC char
-      Serial.println(escMsg);         // print the menu escape (exit) message
+    while (Serial.available())        // clear the input buffer (get rid of CR/LF on Arduino serial monitor)
+      Serial.read();
+    if (selection == exitChar) {        // if its an exit char
+      Serial.println(exitMsg);         // print the menu exit message
       return ;
     }
-    else  // key pressed was not ESC
+    else  // key pressed was not exit char
       Serial.println(selection);  // echo the character
     Serial.println();
     n = 0;    // prepare to search through the selection characters in menuTable
