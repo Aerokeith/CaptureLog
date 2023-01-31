@@ -1,3 +1,7 @@
+/* Basic test of the CaptureLog menu, without the companion CaptureLogMenu library. Creates a single
+    cLog, fills it with random data, and then prints it.
+*/
+
 #include <Arduino.h>
 
 #define CLOG_ENABLE true    // this must be defined before cLog.h is included
